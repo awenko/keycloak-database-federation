@@ -204,7 +204,31 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                                          "            \"cpf\"," +
                                                          "            \"fullName\" from users where upper(\"username\") like (?)  or upper(\"email\") like (?) or upper(\"fullName\") like (?)")
                                            .add()
-        
+
+                                            //Addional Parmas since we will need them
+                                           .property()
+                                           .name("UsernameColName")
+                                           .label("Name of Col. with Username")
+                                           .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "username") + PARAMETER_PLACEHOLDER_HELP)
+                                           .type(ProviderConfigProperty.STRING_TYPE)
+                                           .defaultValue("username")
+                                           .add()
+                                           .property()
+                                           .name("IDColName")
+                                           .label("Name of Col. with ID")
+                                           .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "id") + PARAMETER_PLACEHOLDER_HELP)
+                                           .type(ProviderConfigProperty.STRING_TYPE)
+                                           .defaultValue("id")
+                                           .add()
+                                           .property()
+                                           .name("EMailColName")
+                                           .label("Name of Col. with EMail")
+                                           .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "email") + PARAMETER_PLACEHOLDER_HELP)
+                                           .type(ProviderConfigProperty.STRING_TYPE)
+                                           .defaultValue("email")
+                                           .add()
+                                           //Add end
+
                                            .property()
                                            .name("findPasswordHash")
                                            .label("Find password hash (blowfish or hash digest hex) SQL query")

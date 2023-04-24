@@ -138,6 +138,7 @@ public class UserRepository {
         if (search == null || search.isEmpty()) {
             return doQuery(queryConfigurations.getListAll(), pageable, this::readMap);
         }
+        
         return doQuery(queryConfigurations.getFindBySearchTerm(), pageable, this::readMap, search);
     }
     
@@ -147,10 +148,27 @@ public class UserRepository {
             return !hash.isEmpty() && BCrypt.verifyer().verify(password.toCharArray(), hash).verified;
         } else {
             String hashFunction = queryConfigurations.getHashFunction();
-
+            String[] components = hash.split("\\$"); 
             if(hashFunction.equals("PBKDF2-SHA256")){
-                String[] components = hash.split("\\$");
                 return new PBKDF2SHA256HashingUtil(password, components[2], Integer.valueOf(components[1])).validatePassword(components[3]);
+            }
+     
+            if(components.length>1){
+                try {
+                byte[] decodedBytes = Base64.getDecoder().decode(components[1].trim());               
+                MessageDigest digest   = DigestUtils.getDigest(hashFunction);
+                byte[]        pwdBytesTmp = StringUtils.getBytesUtf8(password);
+
+                byte[] pwdBytes = new byte[pwdBytesTmp.length + decodedBytes.length];
+                System.arraycopy(pwdBytesTmp, 0, pwdBytes, 0, pwdBytesTmp.length);
+                System.arraycopy(decodedBytes, 0, pwdBytes, pwdBytesTmp.length, decodedBytes.length);
+                return Objects.equals(Base64.getEncoder().encodeToString(digest.digest(pwdBytes)), components[0]);
+                } 
+                catch (Exception e) {
+
+                    throw new DBUserStorageException(e.getMessage(), e);
+                }
+                
             }
 
             MessageDigest digest   = DigestUtils.getDigest(hashFunction);
