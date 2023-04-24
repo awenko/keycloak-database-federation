@@ -3,3 +3,4 @@ keycloak
 .DS_Store
 .idea
 .vscode/
+apache-maven-3.9.1/*
