@@ -101,6 +101,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .type(ProviderConfigProperty.STRING_TYPE)
                                            .defaultValue("jdbc:jtds:sqlserver://server-name/database_name;instance=instance_name")
                                            .add()
+
                                            .property()
                                            .name("user")
                                            .label("JDBC Connection User")
@@ -108,6 +109,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .type(ProviderConfigProperty.STRING_TYPE)
                                            .defaultValue("user")
                                            .add()
+
                                            .property()
                                            .name("password")
                                            .label("JDBC Connection Password")
@@ -115,6 +117,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .type(ProviderConfigProperty.PASSWORD)
                                            .defaultValue("password")
                                            .add()
+                                           
                                            .property()
                                            .name("rdbms")
                                            .label("RDBMS")

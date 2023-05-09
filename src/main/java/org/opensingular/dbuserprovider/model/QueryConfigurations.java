@@ -28,7 +28,8 @@ public class QueryConfigurations {
         this.allowDatabaseToOverwriteKeycloak = allowDatabaseToOverwriteKeycloak;
     }
 
-    public RDBMS getRDBMS() {
+    public RDBMS getRDBMS() 
+    {
         return RDBMS;
     }
 
