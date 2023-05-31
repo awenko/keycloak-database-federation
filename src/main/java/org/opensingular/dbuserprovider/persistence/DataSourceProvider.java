@@ -60,7 +60,6 @@ public class DataSourceProvider implements Closeable {
         hikariConfig.setJdbcUrl(url);
         hikariConfig.setConnectionTestQuery(rdbms.getTestString());
         hikariConfig.setDriverClassName(rdbms.getDriver());
-        //reconnect();
     }
     
     private void disposeOldDataSource(HikariDataSource old) {
