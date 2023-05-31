@@ -24,8 +24,9 @@ public class UserAdapter extends AbstractUserAdapterFederatedStorage {
 
     public UserAdapter(KeycloakSession session, RealmModel realm, ComponentModel model, Map<String, String> data, boolean allowDatabaseToOverwriteKeycloak) {
         super(session, realm, model);
-        this.keycloakId = StorageId.keycloakId(model, data.get("id"));
-        this.username = data.get("username");
+        this.keycloakId = StorageId.keycloakId(model, data.get(model.get("IDColName")));
+        this.username = data.get(model.get("UsernameColName"));
+        
         try {
           Map<String, List<String>> attributes = this.getAttributes();
           for (Entry<String, String> e : data.entrySet()) {

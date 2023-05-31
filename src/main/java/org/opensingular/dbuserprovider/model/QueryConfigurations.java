@@ -10,25 +10,28 @@ public class QueryConfigurations {
     private String findByUsername;
     private String findBySearchTerm;
     private String findPasswordHash;
+    private String setPasswordHash;
     private String hashFunction;
     private RDBMS  RDBMS;
     private boolean allowKeycloakDelete;
     private boolean allowDatabaseToOverwriteKeycloak;
 
-    public QueryConfigurations(String count, String listAll, String findById, String findByUsername, String findBySearchTerm, String findPasswordHash, String hashFunction, RDBMS RDBMS, boolean allowKeycloakDelete, boolean allowDatabaseToOverwriteKeycloak) {
+    public QueryConfigurations(String count, String listAll, String findById, String findByUsername, String findBySearchTerm, String findPasswordHash, String setPasswordHash, String hashFunction, RDBMS RDBMS, boolean allowKeycloakDelete, boolean allowDatabaseToOverwriteKeycloak) {
         this.count = count;
         this.listAll = listAll;
         this.findById = findById;
         this.findByUsername = findByUsername;
         this.findBySearchTerm = findBySearchTerm;
         this.findPasswordHash = findPasswordHash;
+        this.setPasswordHash = setPasswordHash;
         this.hashFunction = hashFunction;
         this.RDBMS = RDBMS;
         this.allowKeycloakDelete = allowKeycloakDelete;
         this.allowDatabaseToOverwriteKeycloak = allowDatabaseToOverwriteKeycloak;
     }
 
-    public RDBMS getRDBMS() {
+    public RDBMS getRDBMS() 
+    {
         return RDBMS;
     }
 
@@ -54,6 +57,9 @@ public class QueryConfigurations {
 
     public String getFindPasswordHash() {
         return findPasswordHash;
+    }
+    public String setPasswordHash() {
+        return setPasswordHash;
     }
 
     public String getHashFunction() {

@@ -65,6 +65,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                 model.get("findByUsername"),
                 model.get("findBySearchTerm"),
                 model.get("findPasswordHash"),
+                model.get("setPasswordHash"),
                 model.get("hashFunction"),
                 rdbms,
                 model.get("allowKeycloakDelete", false),
@@ -101,6 +102,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .type(ProviderConfigProperty.STRING_TYPE)
                                            .defaultValue("jdbc:jtds:sqlserver://server-name/database_name;instance=instance_name")
                                            .add()
+
                                            .property()
                                            .name("user")
                                            .label("JDBC Connection User")
@@ -108,6 +110,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .type(ProviderConfigProperty.STRING_TYPE)
                                            .defaultValue("user")
                                            .add()
+
                                            .property()
                                            .name("password")
                                            .label("JDBC Connection Password")
@@ -115,6 +118,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .type(ProviderConfigProperty.PASSWORD)
                                            .defaultValue("password")
                                            .add()
+                                           
                                            .property()
                                            .name("rdbms")
                                            .label("RDBMS")
@@ -146,7 +150,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .label("User count SQL query")
                                            .helpText("SQL query returning the total count of users")
                                            .type(ProviderConfigProperty.STRING_TYPE)
-                                           .defaultValue("select count(*) from users")
+                                           .defaultValue("select count(*) FROM main.Users")
                                            .add()
         
                                            .property()
@@ -154,13 +158,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .label("List All Users SQL query")
                                            .helpText(DEFAULT_HELP_TEXT)
                                            .type(ProviderConfigProperty.STRING_TYPE)
-                                           .defaultValue("select \"id\"," +
-                                                         "            \"username\"," +
-                                                         "            \"email\"," +
-                                                         "            \"firstName\"," +
-                                                         "            \"lastName\"," +
-                                                         "            \"cpf\"," +
-                                                         "            \"fullName\" from users ")
+                                           .defaultValue("SELECT Identifier AS Identifier, Username AS Username, EmailAddress AS EmailAddress, IIF(Enforce2FA= 1,'Force' ,'Skip') AS Enforce2FA FROM main.Users")
                                            .add()
         
                                            .property()
@@ -168,13 +166,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .label("Find user by id SQL query")
                                            .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "user id") + PARAMETER_PLACEHOLDER_HELP)
                                            .type(ProviderConfigProperty.STRING_TYPE)
-                                           .defaultValue("select \"id\"," +
-                                                         "            \"username\"," +
-                                                         "            \"email\"," +
-                                                         "            \"firstName\"," +
-                                                         "            \"lastName\"," +
-                                                         "            \"cpf\"," +
-                                                         "            \"fullName\" from users where \"id\" = ? ")
+                                           .defaultValue("SELECT  Identifier AS Identifier, Username AS Username, EmailAddress AS EmailAddress, IIF(Enforce2FA= 1,'Force' ,'Skip') AS Enforce2FA FROM main.Users where Identifier = CONVERT(uniqueidentifier, ? ) ")
                                            .add()
         
                                            .property()
@@ -182,13 +174,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .label("Find user by username SQL query")
                                            .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "user username") + PARAMETER_PLACEHOLDER_HELP)
                                            .type(ProviderConfigProperty.STRING_TYPE)
-                                           .defaultValue("select \"id\"," +
-                                                         "            \"username\"," +
-                                                         "            \"email\"," +
-                                                         "            \"firstName\"," +
-                                                         "            \"lastName\"," +
-                                                         "            \"cpf\"," +
-                                                         "            \"fullName\" from users where \"username\" = ? ")
+                                           .defaultValue("SELECT  Identifier AS Identifier, Username AS Username, EmailAddress AS EmailAddress, IIF(Enforce2FA= 1,'Force' ,'Skip') AS Enforce2FA FROM main.Users where Username = ? ")
                                            .add()
         
                                            .property()
@@ -196,22 +182,42 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .label("Find user by search term SQL query")
                                            .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "search term") + PARAMETER_PLACEHOLDER_HELP)
                                            .type(ProviderConfigProperty.STRING_TYPE)
-                                           .defaultValue("select \"id\"," +
-                                                         "            \"username\"," +
-                                                         "            \"email\"," +
-                                                         "            \"firstName\"," +
-                                                         "            \"lastName\"," +
-                                                         "            \"cpf\"," +
-                                                         "            \"fullName\" from users where upper(\"username\") like (?)  or upper(\"email\") like (?) or upper(\"fullName\") like (?)")
+                                           .defaultValue("SELECT  Identifier AS Identifier, Username AS Username, EmailAddress AS EmailAddress, IIF(Enforce2FA= 1,'Force' ,'Skip') AS Enforce2FA FROM main.Users where upper(Username) like ('%' + ? + '%')")
                                            .add()
-        
+
+                                            //Addional Parmas since we will need them
+                                           .property()
+                                           .name("UsernameColName")
+                                           .label("Name of Col. with Username")
+                                           .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "username") + PARAMETER_PLACEHOLDER_HELP)
+                                           .type(ProviderConfigProperty.STRING_TYPE)
+                                           .defaultValue("Username")
+                                           .add()
+
+                                           .property()
+                                           .name("IDColName")
+                                           .label("Name of Col. with ID")
+                                           .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "id") + PARAMETER_PLACEHOLDER_HELP)
+                                           .type(ProviderConfigProperty.STRING_TYPE)
+                                           .defaultValue("Identifier")
+                                           .add()
+
+                                           .property()
+                                           .name("EMailColName")
+                                           .label("Name of Col. with EMail")
+                                           .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "email") + PARAMETER_PLACEHOLDER_HELP)
+                                           .type(ProviderConfigProperty.STRING_TYPE)
+                                           .defaultValue("EmailAddress")
+                                           .add()
+
                                            .property()
                                            .name("findPasswordHash")
                                            .label("Find password hash (blowfish or hash digest hex) SQL query")
                                            .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "user username") + PARAMETER_PLACEHOLDER_HELP)
                                            .type(ProviderConfigProperty.STRING_TYPE)
-                                           .defaultValue("select hash_pwd from users where \"username\" = ? ")
+                                           .defaultValue("SELECT PasswordHash FROM main.Users where Username = ?  ")
                                            .add()
+
                                            .property()
                                            .name("hashFunction")
                                            .label("Password hash function")
@@ -220,7 +226,18 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .options("Blowfish (bcrypt)", "MD2", "MD5", "SHA-1", "SHA-256", "SHA3-224", "SHA3-256", "SHA3-384", "SHA3-512", "SHA-384", "SHA-512/224", "SHA-512/256", "SHA-512", "PBKDF2-SHA256")
                                            .defaultValue("SHA-1")
                                            .add()
+
+                                           .property()
+                                           .name("setPasswordHash")
+                                           .label("Set password hash (blowfish or hash digest hex) SQL query")
+                                           .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "user username") + PARAMETER_PLACEHOLDER_HELP)
+                                           .type(ProviderConfigProperty.STRING_TYPE)
+                                           .defaultValue("UPDATE main.Users SET PasswordHash = ? where username = ? ")
+                                           .add()                                          
+                                           
                                            .build();
+
+
     }
     
     private static class ProviderConfig {

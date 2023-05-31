@@ -20,29 +20,46 @@ public class DataSourceProvider implements Closeable {
     private static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("dd-MM-YYYY HH:mm:ss");
     private              ExecutorService  executor           = Executors.newFixedThreadPool(1);
     private              HikariDataSource hikariDataSource;
-    
+    private              HikariConfig hikariConfig           = new HikariConfig();
+
+
     public DataSourceProvider() {
     }
     
     
     synchronized Optional<DataSource> getDataSource() {
+
+        if (this.hikariDataSource==null) {
+           reconnect();
+        }
         return Optional.ofNullable(hikariDataSource);
+
+
     }
     
+    private void reconnect() {
+        HikariDataSource newDS;
+        HikariDataSource old = this.hikariDataSource;
+        this.hikariDataSource = null;
+        try {
+              newDS = new HikariDataSource(hikariConfig);
+              newDS.validate();
+              this.hikariDataSource = newDS;
+        } catch (Exception e) {
+            log.error(e.getMessage(),e);
+        }
+        disposeOldDataSource(old);
+    }
     
     public void configure(String url, RDBMS rdbms, String user, String pass, String name) {
-        HikariConfig hikariConfig = new HikariConfig();
+        
         hikariConfig.setUsername(user);
         hikariConfig.setPassword(pass);
         hikariConfig.setPoolName(StringUtils.capitalize("SINGULAR-USER-PROVIDER-" + name + SIMPLE_DATE_FORMAT.format(new Date())));
+        hikariConfig.setConnectionTimeout(250);//Timout shorter
         hikariConfig.setJdbcUrl(url);
         hikariConfig.setConnectionTestQuery(rdbms.getTestString());
         hikariConfig.setDriverClassName(rdbms.getDriver());
-        HikariDataSource newDS = new HikariDataSource(hikariConfig);
-        newDS.validate();
-        HikariDataSource old = this.hikariDataSource;
-        this.hikariDataSource = newDS;
-        disposeOldDataSource(old);
     }
     
     private void disposeOldDataSource(HikariDataSource old) {
