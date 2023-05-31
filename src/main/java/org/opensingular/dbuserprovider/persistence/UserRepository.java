@@ -142,6 +142,29 @@ public class UserRepository {
         return doQuery(queryConfigurations.getFindBySearchTerm(), pageable, this::readMap, search);
     }
     
+public String doHash(String password, String salt, String hashFunction){
+    MessageDigest digest   = DigestUtils.getDigest(hashFunction);
+
+    if (salt.length()!=0){
+    try {
+        byte[] decodedBytes = Base64.getDecoder().decode(salt.trim());               
+        
+        byte[] pwdBytesTmp = StringUtils.getBytesUtf8(password);
+
+        byte[] pwdBytes = new byte[pwdBytesTmp.length + decodedBytes.length];
+        System.arraycopy(pwdBytesTmp, 0, pwdBytes, 0, pwdBytesTmp.length);
+        System.arraycopy(decodedBytes, 0, pwdBytes, pwdBytesTmp.length, decodedBytes.length);
+        return Base64.getEncoder().encodeToString(digest.digest(pwdBytes));
+        } 
+        catch (Exception e) {
+
+            throw new DBUserStorageException(e.getMessage(), e);
+        }
+    }
+        byte[] pwdBytes = StringUtils.getBytesUtf8(password);
+        return Hex.encodeHexString(digest.digest(pwdBytes));
+}
+
     public boolean validateCredentials(String username, String password) {
         String hash = Optional.ofNullable(doQuery(queryConfigurations.getFindPasswordHash(), null, this::readString, username)).orElse("");
         if (queryConfigurations.isBlowfish()) {
@@ -152,33 +175,28 @@ public class UserRepository {
             if(hashFunction.equals("PBKDF2-SHA256")){
                 return new PBKDF2SHA256HashingUtil(password, components[2], Integer.valueOf(components[1])).validatePassword(components[3]);
             }
-     
-            if(components.length>1){
-                try {
-                byte[] decodedBytes = Base64.getDecoder().decode(components[1].trim());               
-                MessageDigest digest   = DigestUtils.getDigest(hashFunction);
-                byte[]        pwdBytesTmp = StringUtils.getBytesUtf8(password);
 
-                byte[] pwdBytes = new byte[pwdBytesTmp.length + decodedBytes.length];
-                System.arraycopy(pwdBytesTmp, 0, pwdBytes, 0, pwdBytesTmp.length);
-                System.arraycopy(decodedBytes, 0, pwdBytes, pwdBytesTmp.length, decodedBytes.length);
-                return Objects.equals(Base64.getEncoder().encodeToString(digest.digest(pwdBytes)), components[0]);
-                } 
-                catch (Exception e) {
-
-                    throw new DBUserStorageException(e.getMessage(), e);
-                }
-                
-            }
-
-            MessageDigest digest   = DigestUtils.getDigest(hashFunction);
-            byte[]        pwdBytes = StringUtils.getBytesUtf8(password);
-            return Objects.equals(Hex.encodeHexString(digest.digest(pwdBytes)), hash);
+            return Objects.equals(doHash(password, components[1], hashFunction), components[0]);
         }
     }
     
     public boolean updateCredentials(String username, String password) {
-        throw new NotImplementedException("Password update not supported");
+
+        String hash = Optional.ofNullable(doQuery(queryConfigurations.getFindPasswordHash(), null, this::readString, username)).orElse("");
+        if (queryConfigurations.isBlowfish()) {
+            throw new NotImplementedException("Password update for Blowfish not supported");
+        } else {
+            String hashFunction = queryConfigurations.getHashFunction();
+            String[] components = hash.split("\\$"); 
+            if(hashFunction.equals("PBKDF2-SHA256")){
+                throw new NotImplementedException("Password update for PBKDF2 not supported");
+            }
+     
+            String passHash = doHash(password, components[1], hashFunction).concat("$").concat(components[1]);
+            doQuery(queryConfigurations.setPasswordHash(), null, this::readString, passHash,username);
+
+            return true;
+        }
     }
     
     public boolean removeUser() {

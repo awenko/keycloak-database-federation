@@ -65,6 +65,7 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                 model.get("findByUsername"),
                 model.get("findBySearchTerm"),
                 model.get("findPasswordHash"),
+                model.get("setPasswordHash"),
                 model.get("hashFunction"),
                 rdbms,
                 model.get("allowKeycloakDelete", false),
@@ -247,7 +248,20 @@ public class DBUserStorageProviderFactory implements UserStorageProviderFactory<
                                            .options("Blowfish (bcrypt)", "MD2", "MD5", "SHA-1", "SHA-256", "SHA3-224", "SHA3-256", "SHA3-384", "SHA3-512", "SHA-384", "SHA-512/224", "SHA-512/256", "SHA-512", "PBKDF2-SHA256")
                                            .defaultValue("SHA-1")
                                            .add()
+                                           
+                                                                                      //Add end
+
+                                           .property()
+                                           .name("setPasswordHash")
+                                           .label("Set password hash (blowfish or hash digest hex) SQL query")
+                                           .helpText(DEFAULT_HELP_TEXT + String.format(PARAMETER_HELP, "user username") + PARAMETER_PLACEHOLDER_HELP)
+                                           .type(ProviderConfigProperty.STRING_TYPE)
+                                           .defaultValue("UPDATE sy.Users SET PasswordHash = ? where username = ? ")
+                                           .add()                                          
+                                           
                                            .build();
+
+
     }
     
     private static class ProviderConfig {
